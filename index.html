@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的个人网站</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0B0F1A; color: #E6EAF2; font-family: sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- 前台展示区 -->
+    <div id="frontend" class="max-w-4xl mx-auto p-8 hidden">
+        <header class="text-center py-16">
+            <h1 id="display-name" class="text-4xl font-bold mb-4 text-blue-400"></h1>
+            <p id="display-bio" class="text-gray-400"></p>
+            <button onclick="goToAdmin()" class="mt-8 px-4 py-2 bg-gray-800 rounded hover:bg-gray-700 text-sm">进入后台管理</button>
+        </header>
+        <section class="mt-8">
+            <h2 class="text-2xl font-semibold border-b border-gray-700 pb-2 mb-4">技能展示</h2>
+            <ul id="display-skills" class="flex gap-2 flex-wrap"></ul>
+        </section>
+    </div>
+
+    <!-- 后台管理区 (默认隐藏) -->
+    <div id="admin" class="max-w-md mx-auto p-8 mt-20 bg-gray-900 rounded-lg shadow-xl hidden">
+        <h2 class="text-2xl font-bold mb-6 text-center">后台管理</h2>
+        
+        <!-- 简单登录 -->
+        <div id="login-box">
+            <input type="password" id="pwd" placeholder="请输入密码(123456)" class="w-full p-2 mb-4 rounded bg-gray-800 border border-gray-700 text-white">
+            <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded font-semibold">登录</button>
+        </div>
+
+        <!-- 修改表单 -->
+        <div id="edit-box" class="hidden">
+            <label class="block mb-2">姓名：</label>
+            <input type="text" id="input-name" class="w-full p-2 mb-4 rounded bg-gray-800 border border-gray-700 text-white">
+            
+            <label class="block mb-2">简介：</label>
+            <textarea id="input-bio" class="w-full p-2 mb-4 rounded bg-gray-800 border border-gray-700 text-white"></textarea>
+            
+            <label class="block mb-2">技能（用逗号隔开）：</label>
+            <input type="text" id="input-skills" class="w-full p-2 mb-6 rounded bg-gray-800 border border-gray-700 text-white">
+            
+            <button onclick="saveData()" class="w-full bg-green-600 hover:bg-green-500 py-2 rounded font-semibold mb-4">保存修改</button>
+            <button onclick="goToFrontend()" class="w-full bg-gray-700 hover:bg-gray-600 py-2 rounded text-sm">返回前台</button>
+        </div>
+    </div>
+
+    <script>
+        const defaultData = { name: "你的名字", bio: "点击下方按钮进入后台修改我", skills: ["前端开发", "React"] };
+        function getData() {
+            let data = localStorage.getItem('myProfile');
+            return data ? JSON.parse(data) : defaultData;
+        }
+        function renderFrontend() {
+            const data = getData();
+            document.getElementById('display-name').innerText = data.name;
+            document.getElementById('display-bio').innerText = data.bio;
+            const skillsContainer = document.getElementById('display-skills');
+            skillsContainer.innerHTML = '';
+            data.skills.forEach(skill => {
+                const li = document.createElement('li');
+                li.className = "bg-blue-900 text-blue-200 px-3 py-1 rounded-full text-sm";
+                li.innerText = skill;
+                skillsContainer.appendChild(li);
+            });
+        }
+        function router() {
+            if (window.location.hash === '#admin') {
+                document.getElementById('frontend').classList.add('hidden');
+                document.getElementById('admin').classList.remove('hidden');
+                if(localStorage.getItem('isAdmin') === 'true') {
+                    document.getElementById('login-box').classList.add('hidden');
+                    document.getElementById('edit-box').classList.remove('hidden');
+                    fillForm();
+                }
+            } else {
+                document.getElementById('admin').classList.add('hidden');
+                document.getElementById('frontend').classList.remove('hidden');
+                renderFrontend();
+            }
+        }
+        function login() {
+            if (document.getElementById('pwd').value === '123456') {
+                localStorage.setItem('isAdmin', 'true');
+                document.getElementById('login-box').classList.add('hidden');
+                document.getElementById('edit-box').classList.remove('hidden');
+                fillForm();
+            } else { alert('密码错误！'); }
+        }
+        function fillForm() {
+            const data = getData();
+            document.getElementById('input-name').value = data.name;
+            document.getElementById('input-bio').value = data.bio;
+            document.getElementById('input-skills').value = data.skills.join(',');
+        }
+        function saveData() {
+            const newData = {
+                name: document.getElementById('input-name').value,
+                bio: document.getElementById('input-bio').value,
+                skills: document.getElementById('input-skills').value.split(',').map(s => s.trim()).filter(s => s)
+            };
+            localStorage.setItem('myProfile', JSON.stringify(newData));
+            alert('保存成功！');
+            goToFrontend();
+        }
+        function goToAdmin() { window.location.hash = '#admin'; router(); }
+        function goToFrontend() { window.location.hash = ''; router(); }
+        window.addEventListener('hashchange', router);
+        router();
+    </script>
+</body>
+</html>
